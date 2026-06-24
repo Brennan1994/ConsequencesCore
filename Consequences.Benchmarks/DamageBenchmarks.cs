@@ -13,7 +13,7 @@ public class DamageBenchmarks
     public int StructureCount;
 
     private Building[] _buildings = Array.Empty<Building>();
-    private IHazard[] _hazards = Array.Empty<IHazard>();
+    private Hazard[] _hazards = Array.Empty<Hazard>();
 
     [GlobalSetup]
     public void Setup()
@@ -30,7 +30,7 @@ public class DamageBenchmarks
 
         var rng = new Random(42);
         _buildings = new Building[StructureCount];
-        _hazards = new IHazard[StructureCount];
+        _hazards = new Hazard[StructureCount];
         for (int i = 0; i < StructureCount; i++)
         {
             _buildings[i] = new Building
@@ -52,7 +52,7 @@ public class DamageBenchmarks
     }
 
     [Benchmark(Baseline = true)]
-    public double Alt1()
+    public double Alt1_Primitives()
     {
         double total = 0;
         var buildings = _buildings;
@@ -60,14 +60,14 @@ public class DamageBenchmarks
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            total += b.ComputeComponents(hazards[i].Depth, hazards[i].Velocity).Total;
+            total += b.ComputeComponents(hazards[i].Depth).Total;
         }
         return total;
     }
 
 
     [Benchmark]
-    public double Alt2()
+    public double Alt2_ConcreteHazard()
     {
         double total = 0;
         var buildings = _buildings;
@@ -81,7 +81,7 @@ public class DamageBenchmarks
     }
 
     [Benchmark]
-    public double Alt3()
+    public double Alt3_Generics()
     {
         double total = 0;
         var buildings = _buildings;
@@ -89,12 +89,12 @@ public class DamageBenchmarks
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            total += b.ComputeComponentsBetter(hazards[i]).Total;
+            total += b.ComputeComponentsGenerics(hazards[i]).Total;
         }
         return total;
     }
     [Benchmark]
-    public double Alt4()
+    public double Alt4_Concrete()
     {
         double total = 0;
         var buildings = _buildings;
@@ -102,7 +102,7 @@ public class DamageBenchmarks
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            total += b.ComputeComponentsBetterBetter((Hazard)hazards[i]).Total;
+            total += b.ComputeComponentsConcrete(hazards[i]).Total;
         }
         return total;
     }

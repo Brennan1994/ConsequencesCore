@@ -46,8 +46,9 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
             structureValue * occ.StructureDamageFunction(effectiveDepth),
             contentValue * occ.ContentDamageFunction(effectiveDepth));
     }
-    public readonly DamageResult ComputeComponents(IHazard hazard) => ComputeComponents(hazard.Depth, hazard.Velocity);
-    public readonly DamageResult ComputeComponentsBetter(IHazard hazard)
+    public readonly DamageResult ComputeComponents<THazard>(THazard hazard) where THazard : IHazard =>
+        ComputeComponents(hazard.Depth, hazard.Velocity);
+    public readonly DamageResult ComputeComponentsGenerics<THazard>(THazard hazard) where THazard : IHazard
     {
         var occ = OccupancyType;
         double effectiveDepth = hazard.Depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
@@ -60,7 +61,7 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
             contentValue * occ.ContentDamageFunction(effectiveDepth));
     }
 
-       public readonly DamageResult ComputeComponentsBetterBetter(Hazard hazard)
+       public readonly DamageResult ComputeComponentsConcrete(Hazard hazard)
     {
         var occ = OccupancyType;
         double effectiveDepth = hazard.Depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
@@ -91,7 +92,7 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
     public readonly double Compute(double depth, double velocity, out double content, out double structure) =>
         Compute(depth, out content, out structure);
 
-    public readonly double Compute(IHazard hazard, out double content, out double structure) =>
+    public readonly double Compute<THazard>(THazard hazard, out double content, out double structure) where THazard : IHazard =>
         Compute(hazard.Depth, hazard.Velocity, out content, out structure);
 
     // Alternative 4: caller-allocated DamageResult filled via out parameter.
@@ -111,7 +112,7 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
     public readonly void Compute(double depth, double velocity, out DamageResult result) =>
         Compute(depth, out result);
 
-    public readonly void Compute(IHazard hazard, out DamageResult result) =>
+    public readonly void Compute<THazard>(THazard hazard, out DamageResult result) where THazard : IHazard =>
         Compute(hazard.Depth, hazard.Velocity, out result);
 
     // Alternative 5: total only, no components surfaced.
@@ -128,5 +129,5 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
     }
 
     public readonly double Compute(double depth, double velocity) => Compute(depth);
-    public readonly double Compute(IHazard hazard) => Compute(hazard.Depth, hazard.Velocity);
+    public readonly double Compute<THazard>(THazard hazard) where THazard : IHazard => Compute(hazard.Depth, hazard.Velocity);
 }
