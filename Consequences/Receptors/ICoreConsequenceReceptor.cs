@@ -25,4 +25,9 @@ public interface ICoreConsequenceReceptor
     double Compute(IHazard hazard, out double content, out double structure);
     double Compute(double depth, out double content, out double structure);
     double Compute(double depth, double velocity, out double content, out double structure);
+
+    //Alternative 4
+    void Compute(IHazard hazard, out DamageResult result);
+    void Compute(double depth, out DamageResult result);
+    void Compute(double depth, double velocity, out DamageResult result);
 }

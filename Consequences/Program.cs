@@ -18,7 +18,7 @@ var residential = new OccupancyType
 var structure = new Building
 {
     OccupancyType = residential,
-    StructureValue = 200_000,
+    Value = 200_000,
     ContentValue = 100_000,
     FoundationHeight = 1.5,
     NumStories = 1,
@@ -36,7 +36,7 @@ var hazards = new Hazard[]
 };
 
 Console.WriteLine($"Building: {structure.OccupancyType.Name}");
-Console.WriteLine($"  Values: S=${structure.StructureValue:N0} C=${structure.ContentValue:N0}");
+Console.WriteLine($"  Values: S=${structure.Value:N0} C=${structure.ContentValue:N0}");
 Console.WriteLine($"  FoundationHeight={structure.FoundationHeight} ft");
 Console.WriteLine();
 
