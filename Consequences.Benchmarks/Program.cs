@@ -1,4 +1,3 @@
 using BenchmarkDotNet.Running;
-using Consequences.Benchmarks;
 
-BenchmarkRunner.Run<DamageBenchmarks>();
+BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(args);

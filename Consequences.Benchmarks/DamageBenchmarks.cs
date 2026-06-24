@@ -15,6 +15,8 @@ public class DamageBenchmarks
     private Building[] _buildings = Array.Empty<Building>();
     private Hazard[] _hazards = Array.Empty<Hazard>();
 
+    private double[] _depths = Array.Empty<double>();
+
     [GlobalSetup]
     public void Setup()
     {
@@ -49,6 +51,19 @@ public class DamageBenchmarks
                 velocity: rng.NextDouble() * 5.0,
                 duration: 1.0);
         }
+        _depths = DoSampling();
+    }
+
+    public double[] DoSampling()
+    {
+        var rng = new Random(42);
+        double[] res = new double[StructureCount];
+
+        for (int i = 0; i < StructureCount; i++)
+        {
+            res[i] = rng.NextDouble() * 12.0;
+        }
+        return res;
     }
 
     [Benchmark(Baseline = true)]
@@ -56,56 +71,71 @@ public class DamageBenchmarks
     {
         double total = 0;
         var buildings = _buildings;
-        var hazards = _hazards;
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            total += b.ComputeComponents(hazards[i].Depth).Total;
+            total += b.ComputeComponents(_depths[i]).Total;
         }
         return total;
     }
 
 
     [Benchmark]
-    public double Alt2_ConcreteHazard()
+    public double Alt2_GenerateHazard()
     {
+        Hazard[] localHazards = new Hazard[StructureCount];
+        for (int i = 0; i < StructureCount; i++)
+        {
+            localHazards[i] = new Hazard(_depths[i],0,0);
+        }
+
         double total = 0;
         var buildings = _buildings;
-        var hazards = _hazards;
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            total += b.ComputeComponents(hazards[i]).Total;
+            total += b.ComputeComponentsGenerics(localHazards[i]).Total;
         }
         return total;
     }
 
     [Benchmark]
-    public double Alt3_Generics()
+    public double Alt3_ReuseHazard()
     {
+        Hazard localHazards = new();
+
         double total = 0;
         var buildings = _buildings;
-        var hazards = _hazards;
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            total += b.ComputeComponentsGenerics(hazards[i]).Total;
+            localHazards.Depth = _depths[i];
+            total += b.ComputeComponentsGenerics(localHazards).Total;
         }
         return total;
     }
-    [Benchmark]
-    public double Alt4_Concrete()
-    {
-        double total = 0;
-        var buildings = _buildings;
-        var hazards = _hazards;
-        for (int i = 0; i < buildings.Length; i++)
-        {
-            ref var b = ref buildings[i];
-            total += b.ComputeComponentsConcrete(hazards[i]).Total;
-        }
-        return total;
-    }
+    // [Benchmark]
+    // public double Alt4_Concrete()
+    // {
+    //     for (int i = 0; i < StructureCount; i++)
+    //     {
+    //         var rng = new Random(42);
+    //         _hazards[i] = new Hazard(
+    //         depth: rng.NextDouble() * 12.0,
+    //         velocity: rng.NextDouble() * 5.0,
+    //         duration: 1.0);
+    //     }
+
+    //     double total = 0;
+    //     var buildings = _buildings;
+    //     var hazards = _hazards;
+    //     for (int i = 0; i < buildings.Length; i++)
+    //     {
+    //         ref var b = ref buildings[i];
+    //         total += b.ComputeComponentsConcrete(hazards[i]).Total;
+    //     }
+    //     return total;
+    // }
 
     // [Benchmark]
     // public double Alt3_OutParams()

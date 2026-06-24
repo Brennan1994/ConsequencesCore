@@ -1,6 +1,6 @@
 namespace Consequences.Hazards;
 
-public readonly struct Hazard : IHazard
+public struct Hazard : IHazard
 {
     public Hazard(double depth, double velocity, double duration)
     {
@@ -9,7 +9,7 @@ public readonly struct Hazard : IHazard
         Duration = duration;
     }
 
-    public double Depth { get; }
-    public double Velocity { get; }
-    public double Duration { get; }
+    public double Depth { get; set;}
+    public double Velocity { get; set; }
+    public double Duration { get; set;}
 }
