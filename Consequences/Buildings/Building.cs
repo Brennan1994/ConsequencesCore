@@ -21,14 +21,11 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
 
     public StabilityCriteria? SampledStabilityCriteria { get; init; }
 
-    private readonly double EffectiveDepth(double depth) =>
-        depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
-
     // Alternative 2: single struct return.
     public readonly DamageResult ComputeComponents(double depth)
     {
         var occ = OccupancyType;
-        double effectiveDepth = EffectiveDepth(depth);
+        double effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
 
         double structureValue = Value * occ.StructureValuePercentageOfTheMean;
         double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
@@ -38,14 +35,50 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
             contentValue * occ.ContentDamageFunction(effectiveDepth));
     }
 
-    public readonly DamageResult ComputeComponents(double depth, double velocity) => ComputeComponents(depth);
+    public readonly DamageResult ComputeComponents(double depth, double velocity)  {
+        var occ = OccupancyType;
+        double effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
+
+        double structureValue = Value * occ.StructureValuePercentageOfTheMean;
+        double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
+
+        return new DamageResult(
+            structureValue * occ.StructureDamageFunction(effectiveDepth),
+            contentValue * occ.ContentDamageFunction(effectiveDepth));
+    }
     public readonly DamageResult ComputeComponents(IHazard hazard) => ComputeComponents(hazard.Depth, hazard.Velocity);
+    public readonly DamageResult ComputeComponentsBetter(IHazard hazard)
+    {
+        var occ = OccupancyType;
+        double effectiveDepth = hazard.Depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
+
+        double structureValue = Value * occ.StructureValuePercentageOfTheMean;
+        double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
+
+        return new DamageResult(
+            structureValue * occ.StructureDamageFunction(effectiveDepth),
+            contentValue * occ.ContentDamageFunction(effectiveDepth));
+    }
+
+       public readonly DamageResult ComputeComponentsBetterBetter(Hazard hazard)
+    {
+        var occ = OccupancyType;
+        double effectiveDepth = hazard.Depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
+
+        double structureValue = Value * occ.StructureValuePercentageOfTheMean;
+        double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
+
+        return new DamageResult(
+            structureValue * occ.StructureDamageFunction(effectiveDepth),
+            contentValue * occ.ContentDamageFunction(effectiveDepth));
+    }
+
 
     // Alternative 3: out parameters per component, total as return value.
     public readonly double Compute(double depth, out double content, out double structure)
     {
         var occ = OccupancyType;
-        double effectiveDepth = EffectiveDepth(depth);
+        double effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
 
         double structureValue = Value * occ.StructureValuePercentageOfTheMean;
         double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
@@ -65,7 +98,7 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
     public readonly void Compute(double depth, out DamageResult result)
     {
         var occ = OccupancyType;
-        double effectiveDepth = EffectiveDepth(depth);
+        double effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
 
         double structureValue = Value * occ.StructureValuePercentageOfTheMean;
         double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
@@ -85,7 +118,7 @@ public struct Building : ICoreConsequenceReceptor<DamageResult>
     public readonly double Compute(double depth)
     {
         var occ = OccupancyType;
-        double effectiveDepth = EffectiveDepth(depth);
+        double effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
 
         double structureValue = Value * occ.StructureValuePercentageOfTheMean;
         double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
