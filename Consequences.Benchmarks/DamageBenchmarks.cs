@@ -56,9 +56,6 @@ public class DamageBenchmarks
                 ContentValue = (float)(50_000 + rng.NextDouble() * 100_000),
                 FoundationHeight = (float)(rng.NextDouble() * 3.0),
                 NumStories = 1,
-                FloorHeight = 9f,
-                AbleBodiedPeople = 2,
-                LimitedMobilityPeople = 0,
             };
 
             float depth = (float)(rng.NextDouble() * 12.0);

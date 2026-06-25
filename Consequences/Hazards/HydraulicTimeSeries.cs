@@ -1,5 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
-
 namespace Consequences.Hazards;
 
 public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
@@ -80,6 +78,9 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
         }
         else
         {
+            TimeMinutes = new float[allDepthValues.Length];
+            Depths = new float[allDepthValues.Length];
+            Velocities = new float[allDepthValues.Length];
             for (int i = 0; i < allDepthValues.Length; i++)
             {
                 TimeMinutes[i] = allTimeValuesMinutes[i];
