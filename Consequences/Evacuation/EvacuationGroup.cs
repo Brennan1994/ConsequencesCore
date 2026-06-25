@@ -21,7 +21,7 @@ public struct EvacuationGroup
     public TransportationMode ModeOfTransportation { get; }
     public float DepthThreshold { get; }
     public StabilityCriteria StabilityCriteria { get; }
-    public bool HasGPS { get; }
+    public bool HasGPS { get; set; }
 
     public int GroupIndex { get; set; }
     public float ActualMobilizeTime { get; set; }

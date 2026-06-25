@@ -14,4 +14,7 @@ public class OccupancyType
     public float StructureValuePercentageOfTheMean { get; init; } = 1.0f;
     public float ContentValuePercentageOfTheMean { get; init; } = 1.0f;
 
+    public bool CollectivelyWarned { get; init; } 
+    public bool CollectivelyMobilize {get; init;}
+
 }
