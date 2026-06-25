@@ -14,10 +14,7 @@ public struct Building
 
     public float FoundationHeight { get; init; }
     public int NumStories { get; init; }
-    public float FloorHeight { get; init; }
-
-    public int AbleBodiedPeople { get; init; }
-    public int LimitedMobilityPeople { get; init; }
+    
 
     public StabilityCriteria? SampledStabilityCriteria { get; init; }
 
