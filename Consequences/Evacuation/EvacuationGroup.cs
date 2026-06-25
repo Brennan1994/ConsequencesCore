@@ -4,8 +4,13 @@ using Consequences.Stability;
 
 namespace Consequences.Evacuation;
 
-public class EvacuationGroup
+/// <summary>
+/// Evacuations groups represent the population of the study. All Lifeloss simulations 
+/// utilize this concept
+/// </summary>
+public struct EvacuationGroup
 {
+        //we don't expect an evacuating group size to ever exceed 256
     public byte Under65 { get; }
     public byte Over65 { get; }
     public int OriginIndex { get; }
