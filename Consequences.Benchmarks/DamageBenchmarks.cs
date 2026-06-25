@@ -2,7 +2,7 @@ using BenchmarkDotNet.Attributes;
 using Consequences.Buildings;
 using Consequences.Hazards;
 using Consequences.Occupancy;
-using Consequences.Receptors;
+using Numerics.Data;
 
 namespace Consequences.Benchmarks;
 
@@ -13,26 +13,34 @@ public class DamageBenchmarks
     public int StructureCount;
 
     private Building[] _buildings = Array.Empty<Building>();
-    private DepthVelocity[] _hazards = Array.Empty<DepthVelocity>();
 
     private float[] _depths = Array.Empty<float>();
+    private float[] _velocities = Array.Empty<float>();
+
+    private DepthHazard[] _depthHazards = Array.Empty<DepthHazard>();
+    private DepthVelocity[] _depthVelocityHazards = Array.Empty<DepthVelocity>();
+    private HydraulicTimeSeries[] _timeSeriesHazards = Array.Empty<HydraulicTimeSeries>();
 
     [GlobalSetup]
     public void Setup()
     {
+        
         var occupancy = new OccupancyType
         {
             Name = "RES1",
             StructureDamageFunction = static d => Math.Clamp(d / 10f, 0f, 1f),
             ContentDamageFunction = static d => Math.Clamp(d / 8f, 0f, 1f),
-            OtherDamageFunction = static _ => 0f,
-            VehicleDamageFunction = static _ => 0f,
             FoundationHeightOffset = 0f,
         };
 
         var rng = new Random(42);
         _buildings = new Building[StructureCount];
-        _hazards = new DepthVelocity[StructureCount];
+        _depths = new float[StructureCount];
+        _velocities = new float[StructureCount];
+        _depthHazards = new DepthHazard[StructureCount];
+        _depthVelocityHazards = new DepthVelocity[StructureCount];
+        _timeSeriesHazards = new HydraulicTimeSeries[StructureCount];
+
         for (int i = 0; i < StructureCount; i++)
         {
             _buildings[i] = new Building
@@ -46,152 +54,81 @@ public class DamageBenchmarks
                 AbleBodiedPeople = 2,
                 LimitedMobilityPeople = 0,
             };
-            _hazards[i] = new DepthVelocity(
-                depth: (float)(rng.NextDouble() * 12.0),
-                velocity: (float)(rng.NextDouble() * 5.0));
+
+            float depth = (float)(rng.NextDouble() * 12.0);
+            float velocity = (float)(rng.NextDouble() * 5.0);
+            _depths[i] = depth;
+            _velocities[i] = velocity;
+
+            _depthHazards[i] = new DepthHazard(depth);
+            _depthVelocityHazards[i] = new DepthVelocity(depth, velocity);
+            _timeSeriesHazards[i] = BuildTimeSeries(depth, velocity);
         }
-        _depths = DoSampling();
     }
 
-    public float[] DoSampling()
+    private static HydraulicTimeSeries BuildTimeSeries(float peakDepth, float peakVelocity)
     {
-        var rng = new Random(42);
-        float[] res = new float[StructureCount];
-
-        for (int i = 0; i < StructureCount; i++)
-        {
-            res[i] = (float)(rng.NextDouble() * 12.0);
-        }
-        return res;
+        // Triangular rise-and-fall whose peak matches the scalar base data,
+        // so all hazard types resolve to the same Depth/Velocity values.
+        float[] times = { 0f, 30f, 60f, 90f, 120f };
+        float[] depths = { 0f, peakDepth * 0.5f, peakDepth, peakDepth * 0.5f, 0f };
+        float[] velocities = { 0f, peakVelocity * 0.5f, peakVelocity, peakVelocity * 0.5f, 0f };
+        return new HydraulicTimeSeries(times, depths, velocities, pointReductionTolerance: 0.001f);
     }
 
     [Benchmark(Baseline = true)]
-    public float Alt1_Primitives()
+    public float Depth_Primitive()
     {
         float total = 0;
         var buildings = _buildings;
+        var depths = _depths;
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            total += b.Compute(_depths[i]);
-        }
-        return total;
-    }
-
-
-    [Benchmark]
-    public float Alt2_GenerateHazard()
-    {
-        DepthHazard[] localHazards = new DepthHazard[StructureCount];
-        for (int i = 0; i < StructureCount; i++)
-        {
-            localHazards[i] = new DepthHazard(_depths[i]);
-        }
-
-        float total = 0;
-        var buildings = _buildings;
-        for (int i = 0; i < buildings.Length; i++)
-        {
-            ref var b = ref buildings[i];
-            total += b.Compute(localHazards[i]).Total;
+            total += Building.ComputeMetal(depths[i],b);
         }
         return total;
     }
 
     [Benchmark]
-    public float Alt3_ReuseHazard()
+    public float DepthHazard_Struct()
     {
-        DepthVelocity localHazards = new();
-
         float total = 0;
         var buildings = _buildings;
+        var hazards = _depthHazards;
         for (int i = 0; i < buildings.Length; i++)
         {
             ref var b = ref buildings[i];
-            localHazards.Depth = _depths[i];
-            total += b.Compute(localHazards).Total;
+            total += b.Compute(hazards[i]).Total;
         }
         return total;
     }
-    // [Benchmark]
-    // public float Alt4_Concrete()
-    // {
-    //     for (int i = 0; i < StructureCount; i++)
-    //     {
-    //         var rng = new Random(42);
-    //         _hazards[i] = new Hazard(
-    //         depth: rng.NextDouble() * 12.0,
-    //         velocity: rng.NextDouble() * 5.0,
-    //         duration: 1.0);
-    //     }
 
-    //     float total = 0;
-    //     var buildings = _buildings;
-    //     var hazards = _hazards;
-    //     for (int i = 0; i < buildings.Length; i++)
-    //     {
-    //         ref var b = ref buildings[i];
-    //         total += b.ComputeComponentsConcrete(hazards[i]).Total;
-    //     }
-    //     return total;
-    // }
+    [Benchmark]
+    public float DepthVelocityHazard_Struct()
+    {
+        float total = 0;
+        var buildings = _buildings;
+        var hazards = _depthVelocityHazards;
+        for (int i = 0; i < buildings.Length; i++)
+        {
+            ref var b = ref buildings[i];
+            total += b.Compute(hazards[i]).Total;
+        }
+        return total;
+    }
 
-    // [Benchmark]
-    // public float Alt3_OutParams()
-    // {
-    //     float total = 0;
-    //     var buildings = _buildings;
-    //     var hazards = _hazards;
-    //     for (int i = 0; i < buildings.Length; i++)
-    //     {
-    //         ref var b = ref buildings[i];
-    //         total += b.Compute(hazards[i].Depth, hazards[i].Velocity, out _, out _);
-    //     }
-    //     return total;
-    // }
-
-    // [Benchmark]
-    // public float Alt4_OutStruct()
-    // {
-    //     float total = 0;
-    //     var buildings = _buildings;
-    //     var hazards = _hazards;
-    //     for (int i = 0; i < buildings.Length; i++)
-    //     {
-    //         ref var b = ref buildings[i];
-    //         b.Compute(hazards[i].Depth, hazards[i].Velocity, out DamageResult result);
-    //         total += result.Total;
-    //     }
-    //     return total;
-    // }
-
-    // [Benchmark]
-    // public float Alt5_TotalOnly()
-    // {
-    //     float total = 0;
-    //     var buildings = _buildings;
-    //     var hazards = _hazards;
-    //     for (int i = 0; i < buildings.Length; i++)
-    //     {
-    //         ref var b = ref buildings[i];
-    //         total += b.Compute(hazards[i].Depth, hazards[i].Velocity);
-    //     }
-    //     return total;
-    // }
-
-    // [Benchmark]
-    // public float Alt6_BatchedAPI()
-    // {
-    //     float total = 0;
-    //     var results = BuildingBatch.ComputeBatch(_buildings, _hazards);
-    //     for (int i = 0; i < results.Length; i++)
-    //         total += results[i].Total;
-    //     return total;
-    // }
-
-    // [Benchmark]
-    // public float Alt7_BatchedTotalOnly()
-    // {
-    //     return BuildingBatch.ComputeBatchTotal(_buildings, _hazards);
-    // }
+    [Benchmark]
+    public float HydraulicTimeSeriesHazard_Class()
+    {
+        float total = 0;
+        var buildings = _buildings;
+        var hazards = _timeSeriesHazards;
+        for (int i = 0; i < buildings.Length; i++)
+        {
+            ref var b = ref buildings[i];
+            total += b.Compute(hazards[i]).Total;
+        }
+        return total;
+    }
 }

@@ -5,7 +5,7 @@ using Consequences.Stability;
 
 namespace Consequences.Buildings;
 
-public struct Building 
+public struct Building
 {
     public required OccupancyType OccupancyType { get; init; }
 
@@ -21,7 +21,9 @@ public struct Building
 
     public StabilityCriteria? SampledStabilityCriteria { get; init; }
 
-    // Alternative 2: single struct return.
+
+    public DamageResult Compute(float depth) => Compute(depth, this);
+    public DamageResult Compute(DepthHazard depth) => Compute(depth.Depth, this);
     public static DamageResult Compute(float depth, Building building)
     {
         var occ = building.OccupancyType;
@@ -35,33 +37,38 @@ public struct Building
             contentValue * occ.ContentDamageFunction(effectiveDepth));
     }
 
-    public static DamageResult Compute(float depth, float velocity, Building building)  {
-     //   if(building.SampledStabilityCriteria.Collapsed(depth, velocity, building.FoundationHeight ))
+    public DamageResult Compute(float depth, float velocity) => Compute(depth, velocity, this);
+    public DamageResult Compute(DepthVelocity depthVelocity) => Compute(depthVelocity.Depth, depthVelocity.Velocity, this);
+    public DamageResult Compute(HydraulicTimeSeries depthVelocity) => Compute(depthVelocity.MaxDepth, depthVelocity.MaxVelocity, this);
 
+    public static DamageResult Compute(float depth, float velocity, Building building)
+    {
+        var occ = building.OccupancyType;
+        float effectiveDepth = depth - building.FoundationHeight - building.OccupancyType.FoundationHeightOffset;
+        if (effectiveDepth <= 0)
+            return new(0, 0);
+        float structureValue = building.Value * occ.StructureValuePercentageOfTheMean;
+        float contentValue = building.ContentValue * occ.ContentValuePercentageOfTheMean;
+        if (building.SampledStabilityCriteria != null && building.SampledStabilityCriteria.Collapsed(depth, velocity, building.FoundationHeight))
+        {
+            return new DamageResult(structureValue, contentValue);
+        }
+        return new DamageResult(
+            structureValue * occ.StructureDamageFunction(effectiveDepth),
+            contentValue * occ.ContentDamageFunction(effectiveDepth));
+    }
+
+    //This is our bare metal baseline. don't delete
+    public static float ComputeMetal(float depth, Building building)
+    {
         var occ = building.OccupancyType;
         float effectiveDepth = depth - building.FoundationHeight - building.OccupancyType.FoundationHeightOffset;
 
         float structureValue = building.Value * occ.StructureValuePercentageOfTheMean;
         float contentValue = building.ContentValue * occ.ContentValuePercentageOfTheMean;
 
-        return new DamageResult(
-            structureValue * occ.StructureDamageFunction(effectiveDepth),
+        return (
+            structureValue * occ.StructureDamageFunction(effectiveDepth) +
             contentValue * occ.ContentDamageFunction(effectiveDepth));
-    }
-
-    public readonly DamageResult Compute<THazard>(THazard hazard) where THazard : IDepthHazard =>
-        Compute(hazard.Depth, this);
-
-    // Alternative 5: total only, no components surfaced ****Fastest possible. 
-    public readonly float Compute(float depth)
-    {
-        var occ = OccupancyType;
-        float effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
-
-        float structureValue = Value * occ.StructureValuePercentageOfTheMean;
-        float contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
-
-        return structureValue * occ.StructureDamageFunction(effectiveDepth)
-             + contentValue * occ.ContentDamageFunction(effectiveDepth);
     }
 }
