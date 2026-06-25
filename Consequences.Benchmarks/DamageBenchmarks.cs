@@ -15,7 +15,7 @@ public class DamageBenchmarks
     private Building[] _buildings = Array.Empty<Building>();
     private DepthVelocity[] _hazards = Array.Empty<DepthVelocity>();
 
-    private double[] _depths = Array.Empty<double>();
+    private float[] _depths = Array.Empty<float>();
 
     [GlobalSetup]
     public void Setup()
@@ -23,11 +23,11 @@ public class DamageBenchmarks
         var occupancy = new OccupancyType
         {
             Name = "RES1",
-            StructureDamageFunction = static d => Math.Clamp(d / 10.0, 0.0, 1.0),
-            ContentDamageFunction = static d => Math.Clamp(d / 8.0, 0.0, 1.0),
-            OtherDamageFunction = static _ => 0.0,
-            VehicleDamageFunction = static _ => 0.0,
-            FoundationHeightOffset = 0.0,
+            StructureDamageFunction = static d => Math.Clamp(d / 10f, 0f, 1f),
+            ContentDamageFunction = static d => Math.Clamp(d / 8f, 0f, 1f),
+            OtherDamageFunction = static _ => 0f,
+            VehicleDamageFunction = static _ => 0f,
+            FoundationHeightOffset = 0f,
         };
 
         var rng = new Random(42);
@@ -38,37 +38,37 @@ public class DamageBenchmarks
             _buildings[i] = new Building
             {
                 OccupancyType = occupancy,
-                Value = 100_000 + rng.NextDouble() * 200_000,
-                ContentValue = 50_000 + rng.NextDouble() * 100_000,
-                FoundationHeight = rng.NextDouble() * 3.0,
+                Value = (float)(100_000 + rng.NextDouble() * 200_000),
+                ContentValue = (float)(50_000 + rng.NextDouble() * 100_000),
+                FoundationHeight = (float)(rng.NextDouble() * 3.0),
                 NumStories = 1,
-                FloorHeight = 9.0,
+                FloorHeight = 9f,
                 AbleBodiedPeople = 2,
                 LimitedMobilityPeople = 0,
             };
             _hazards[i] = new DepthVelocity(
-                depth: rng.NextDouble() * 12.0,
-                velocity: rng.NextDouble() * 5.0);
+                depth: (float)(rng.NextDouble() * 12.0),
+                velocity: (float)(rng.NextDouble() * 5.0));
         }
         _depths = DoSampling();
     }
 
-    public double[] DoSampling()
+    public float[] DoSampling()
     {
         var rng = new Random(42);
-        double[] res = new double[StructureCount];
+        float[] res = new float[StructureCount];
 
         for (int i = 0; i < StructureCount; i++)
         {
-            res[i] = rng.NextDouble() * 12.0;
+            res[i] = (float)(rng.NextDouble() * 12.0);
         }
         return res;
     }
 
     [Benchmark(Baseline = true)]
-    public double Alt1_Primitives()
+    public float Alt1_Primitives()
     {
-        double total = 0;
+        float total = 0;
         var buildings = _buildings;
         for (int i = 0; i < buildings.Length; i++)
         {
@@ -80,7 +80,7 @@ public class DamageBenchmarks
 
 
     [Benchmark]
-    public double Alt2_GenerateHazard()
+    public float Alt2_GenerateHazard()
     {
         DepthHazard[] localHazards = new DepthHazard[StructureCount];
         for (int i = 0; i < StructureCount; i++)
@@ -88,7 +88,7 @@ public class DamageBenchmarks
             localHazards[i] = new DepthHazard(_depths[i]);
         }
 
-        double total = 0;
+        float total = 0;
         var buildings = _buildings;
         for (int i = 0; i < buildings.Length; i++)
         {
@@ -99,11 +99,11 @@ public class DamageBenchmarks
     }
 
     [Benchmark]
-    public double Alt3_ReuseHazard()
+    public float Alt3_ReuseHazard()
     {
         DepthVelocity localHazards = new();
 
-        double total = 0;
+        float total = 0;
         var buildings = _buildings;
         for (int i = 0; i < buildings.Length; i++)
         {
@@ -114,7 +114,7 @@ public class DamageBenchmarks
         return total;
     }
     // [Benchmark]
-    // public double Alt4_Concrete()
+    // public float Alt4_Concrete()
     // {
     //     for (int i = 0; i < StructureCount; i++)
     //     {
@@ -125,7 +125,7 @@ public class DamageBenchmarks
     //         duration: 1.0);
     //     }
 
-    //     double total = 0;
+    //     float total = 0;
     //     var buildings = _buildings;
     //     var hazards = _hazards;
     //     for (int i = 0; i < buildings.Length; i++)
@@ -137,9 +137,9 @@ public class DamageBenchmarks
     // }
 
     // [Benchmark]
-    // public double Alt3_OutParams()
+    // public float Alt3_OutParams()
     // {
-    //     double total = 0;
+    //     float total = 0;
     //     var buildings = _buildings;
     //     var hazards = _hazards;
     //     for (int i = 0; i < buildings.Length; i++)
@@ -151,9 +151,9 @@ public class DamageBenchmarks
     // }
 
     // [Benchmark]
-    // public double Alt4_OutStruct()
+    // public float Alt4_OutStruct()
     // {
-    //     double total = 0;
+    //     float total = 0;
     //     var buildings = _buildings;
     //     var hazards = _hazards;
     //     for (int i = 0; i < buildings.Length; i++)
@@ -166,9 +166,9 @@ public class DamageBenchmarks
     // }
 
     // [Benchmark]
-    // public double Alt5_TotalOnly()
+    // public float Alt5_TotalOnly()
     // {
-    //     double total = 0;
+    //     float total = 0;
     //     var buildings = _buildings;
     //     var hazards = _hazards;
     //     for (int i = 0; i < buildings.Length; i++)
@@ -180,9 +180,9 @@ public class DamageBenchmarks
     // }
 
     // [Benchmark]
-    // public double Alt6_BatchedAPI()
+    // public float Alt6_BatchedAPI()
     // {
-    //     double total = 0;
+    //     float total = 0;
     //     var results = BuildingBatch.ComputeBatch(_buildings, _hazards);
     //     for (int i = 0; i < results.Length; i++)
     //         total += results[i].Total;
@@ -190,7 +190,7 @@ public class DamageBenchmarks
     // }
 
     // [Benchmark]
-    // public double Alt7_BatchedTotalOnly()
+    // public float Alt7_BatchedTotalOnly()
     // {
     //     return BuildingBatch.ComputeBatchTotal(_buildings, _hazards);
     // }

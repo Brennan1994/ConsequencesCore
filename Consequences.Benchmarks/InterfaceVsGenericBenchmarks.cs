@@ -12,14 +12,14 @@ public class InterfaceVsGenericBenchmarks
 {
     public interface ISample
     {
-        double A { get; }
-        double B { get; }
+        float A { get; }
+        float B { get; }
     }
 
     public struct SampleStruct : ISample
     {
-        public double A { get; set; }
-        public double B { get; set; }
+        public float A { get; set; }
+        public float B { get; set; }
     }
 
     [Params(1_000, 100_000)]
@@ -34,16 +34,16 @@ public class InterfaceVsGenericBenchmarks
         _samples = new SampleStruct[N];
         for (int i = 0; i < N; i++)
         {
-            _samples[i] = new SampleStruct { A = rng.NextDouble(), B = rng.NextDouble() };
+            _samples[i] = new SampleStruct { A = (float)rng.NextDouble(), B = (float)rng.NextDouble() };
         }
     }
 
     // Lower bound: no abstraction at all. The JIT sees the concrete struct
     // and inlines the property reads.
     [Benchmark(Baseline = true)]
-    public double ViaConcrete()
+    public float ViaConcrete()
     {
-        double total = 0;
+        float total = 0;
         var samples = _samples;
         for (int i = 0; i < samples.Length; i++)
         {
@@ -55,9 +55,9 @@ public class InterfaceVsGenericBenchmarks
     // Generic constraint. The JIT specializes Generic<SampleStruct> for the
     // value-type T, so property access stays direct — no boxing, no vtable.
     [Benchmark]
-    public double ViaGeneric()
+    public float ViaGeneric()
     {
-        double total = 0;
+        float total = 0;
         var samples = _samples;
         for (int i = 0; i < samples.Length; i++)
         {
@@ -69,9 +69,9 @@ public class InterfaceVsGenericBenchmarks
     // Interface parameter. Passing a struct as ISample boxes it on every call
     // and turns the property reads into virtual interface dispatches.
     [Benchmark]
-    public double ViaInterface()
+    public float ViaInterface()
     {
-        double total = 0;
+        float total = 0;
         var samples = _samples;
         for (int i = 0; i < samples.Length; i++)
         {
@@ -80,9 +80,9 @@ public class InterfaceVsGenericBenchmarks
         return total;
     }
 
-    private static double Concrete(SampleStruct s) => s.A * 2.0 + s.B;
+    private static float Concrete(SampleStruct s) => s.A * 2f + s.B;
 
-    private static double Generic<T>(T s) where T : ISample => s.A * 2.0 + s.B;
+    private static float Generic<T>(T s) where T : ISample => s.A * 2f + s.B;
 
-    private static double Interface(ISample s) => s.A * 2.0 + s.B;
+    private static float Interface(ISample s) => s.A * 2f + s.B;
 }

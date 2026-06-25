@@ -2,9 +2,9 @@ namespace Consequences.Hazards;
 
 public struct DepthHazard : IDepthHazard
 {
-    public double Depth { get; set; }
+    public float Depth { get; set; }
 
-    public DepthHazard(double depth)
+    public DepthHazard(float depth)
     {
         Depth = depth;
     }

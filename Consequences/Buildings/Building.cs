@@ -9,12 +9,12 @@ public struct Building
 {
     public required OccupancyType OccupancyType { get; init; }
 
-    public double Value { get; init; }
-    public double ContentValue { get; init; }
+    public float Value { get; init; }
+    public float ContentValue { get; init; }
 
-    public double FoundationHeight { get; init; }
+    public float FoundationHeight { get; init; }
     public int NumStories { get; init; }
-    public double FloorHeight { get; init; }
+    public float FloorHeight { get; init; }
 
     public int AbleBodiedPeople { get; init; }
     public int LimitedMobilityPeople { get; init; }
@@ -22,25 +22,27 @@ public struct Building
     public StabilityCriteria? SampledStabilityCriteria { get; init; }
 
     // Alternative 2: single struct return.
-    public static DamageResult Compute(double depth, Building building)
+    public static DamageResult Compute(float depth, Building building)
     {
         var occ = building.OccupancyType;
-        double effectiveDepth = depth - building.FoundationHeight - building.OccupancyType.FoundationHeightOffset;
+        float effectiveDepth = depth - building.FoundationHeight - building.OccupancyType.FoundationHeightOffset;
 
-        double structureValue = building.Value * occ.StructureValuePercentageOfTheMean;
-        double contentValue = building.ContentValue * occ.ContentValuePercentageOfTheMean;
+        float structureValue = building.Value * occ.StructureValuePercentageOfTheMean;
+        float contentValue = building.ContentValue * occ.ContentValuePercentageOfTheMean;
 
         return new DamageResult(
             structureValue * occ.StructureDamageFunction(effectiveDepth),
             contentValue * occ.ContentDamageFunction(effectiveDepth));
     }
 
-    public static DamageResult Compute(double depth, double velocity, Building building)  {
-        var occ = building.OccupancyType;
-        double effectiveDepth = depth - building.FoundationHeight - building.OccupancyType.FoundationHeightOffset;
+    public static DamageResult Compute(float depth, float velocity, Building building)  {
+     //   if(building.SampledStabilityCriteria.Collapsed(depth, velocity, building.FoundationHeight ))
 
-        double structureValue = building.Value * occ.StructureValuePercentageOfTheMean;
-        double contentValue = building.ContentValue * occ.ContentValuePercentageOfTheMean;
+        var occ = building.OccupancyType;
+        float effectiveDepth = depth - building.FoundationHeight - building.OccupancyType.FoundationHeightOffset;
+
+        float structureValue = building.Value * occ.StructureValuePercentageOfTheMean;
+        float contentValue = building.ContentValue * occ.ContentValuePercentageOfTheMean;
 
         return new DamageResult(
             structureValue * occ.StructureDamageFunction(effectiveDepth),
@@ -51,13 +53,13 @@ public struct Building
         Compute(hazard.Depth, this);
 
     // Alternative 5: total only, no components surfaced ****Fastest possible. 
-    public readonly double Compute(double depth)
+    public readonly float Compute(float depth)
     {
         var occ = OccupancyType;
-        double effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
+        float effectiveDepth = depth - FoundationHeight - OccupancyType.FoundationHeightOffset;
 
-        double structureValue = Value * occ.StructureValuePercentageOfTheMean;
-        double contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
+        float structureValue = Value * occ.StructureValuePercentageOfTheMean;
+        float contentValue = ContentValue * occ.ContentValuePercentageOfTheMean;
 
         return structureValue * occ.StructureDamageFunction(effectiveDepth)
              + contentValue * occ.ContentDamageFunction(effectiveDepth);

@@ -44,9 +44,9 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
     /// </summary>
     public float MaxDepthTimesVelocitySquared { get; }
 
-    public double Velocity => MaxVelocity;
+    public float Velocity => MaxVelocity;
 
-    public double Depth => MaxDepth;
+    public float Depth => MaxDepth;
 
     /// <summary>
     /// This class takes a time series of depth and velocity data and simplifies it to remove redundant data points.
@@ -55,7 +55,7 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
     /// <param name="allDepthValues">Array of depth values in time series.</param>
     /// <param name="allVelocityValues">Array of velocity values in time series.</param>
     /// <param name="pointReductionTolerance">Douglas-Peucker-Ramer reduction tolerance for removing reduntant data points. The higher the tolerance the more data will be removed.</param>
-    public HydraulicTimeSeries(float[] allTimeValuesMinutes, float[] allDepthValues, float[] allVelocityValues, double pointReductionTolerance)
+    public HydraulicTimeSeries(float[] allTimeValuesMinutes, float[] allDepthValues, float[] allVelocityValues, float pointReductionTolerance)
     {
         if (pointReductionTolerance > 0)
         {
@@ -142,7 +142,7 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
     /// <param name="yValues">y-values of the line.</param>
     /// <param name="tolerance">Tolerance to remove points. Higher tolerance will remove more points.</param>
     /// <returns></returns>
-    private List<int> DouglasPeuckerReduction(float[] xValues, float[] yValues, double tolerance)
+    private List<int> DouglasPeuckerReduction(float[] xValues, float[] yValues, float tolerance)
     {
         // Validate inputs
         var resultIndexes = new List<int>();
@@ -165,7 +165,7 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
         return resultIndexes;
     }
 
-    private void DouglasPeuckerReduction(int firstPoint, int lastPoint, float[] xValues, float[] yValues, double tolerance, ref List<int> pointIndexesToKeep)
+    private void DouglasPeuckerReduction(int firstPoint, int lastPoint, float[] xValues, float[] yValues, float tolerance, ref List<int> pointIndexesToKeep)
     {
         // No intermediate points
         if (lastPoint - firstPoint < 2) { return; }
@@ -181,13 +181,13 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
             // If there are no points between start and end, continue
             if (end - start < 2) { continue; }
 
-            double maxDistance = 0d;
+            float maxDistance = 0f;
             int indexFarthest = -1;
 
             // Search only intermediate points between start and end
             for (int index = start + 1; index < end; index++)
             {
-                double distance = PerpendicularDistance(xValues[start], yValues[start], xValues[end], yValues[end], xValues[index], yValues[index]);
+                float distance = PerpendicularDistance(xValues[start], yValues[start], xValues[end], yValues[end], xValues[index], yValues[index]);
                 if (distance > maxDistance)
                 {
                     maxDistance = distance;
@@ -207,13 +207,13 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
         }
     }
 
-    private double PerpendicularDistance(float aX, float aY, float bX, float bY, float cX, float cY)
+    private float PerpendicularDistance(float aX, float aY, float bX, float bY, float cX, float cY)
     {
         // Area = |(1/2)(x1y2 + x2y3 + x3y1 - x2y1 - x3y2 - x1y3)|   *Area of triangle
         // Base = v((x1-x2)²+(x1-x2)²)                               *Base of Triangle*
         // Area = .5*Base*H                                          *Solve for height
         // Height = Area/.5/Base
-        double area = Math.Abs((aX * bY + bX * cY + cX * aY - bX * aY - cX * bY - aX * cY) * 0.5);
+        float area = Math.Abs((aX * bY + bX * cY + cX * aY - bX * aY - cX * bY - aX * cY) * 0.5f);
         float xDiff = (float)(aX - bX);
         float yDiff = (float)(aY - bY);
         float triangleBase; //= Math.Pow(xDiff * xDiff + yDiff * yDiff, 0.5);
@@ -268,7 +268,7 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
     /// </summary>
     /// <param name="timeRelativeToHydraulicStart">Time in minutes relative to the start to sample depth.</param>
     /// <returns></returns>
-    public float GetDepth(double timeRelativeToHydraulicStart)
+    public float GetDepth(float timeRelativeToHydraulicStart)
     {
         if (timeRelativeToHydraulicStart < TimeMinutes[0]) { return 0; }
         else if (timeRelativeToHydraulicStart >= TimeMinutes[TimeMinutes.Count() - 1]) { return Depths[Depths.Count() - 1]; }
@@ -280,7 +280,7 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
             var timeIndex = Array.BinarySearch(TimeMinutes, (Single)timeRelativeToHydraulicStart);
             if (timeIndex < 0) { timeIndex = -1 * timeIndex - 1; }
             // 
-            var currentDepthSlope = (Depths[timeIndex] - Depths[timeIndex - 1]) / (double)(TimeMinutes[timeIndex] - TimeMinutes[timeIndex - 1]);
+            var currentDepthSlope = (Depths[timeIndex] - Depths[timeIndex - 1]) / (float)(TimeMinutes[timeIndex] - TimeMinutes[timeIndex - 1]);
             // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
             // Calculate the depth and velocity using linear interpolation
             // y = y0+((y1-y0)/(x1-x0))*(x-x0) = y0 + slope*(x-x0) simple linear interpolation
@@ -295,7 +295,7 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
     /// </summary>
     /// <param name="depthValue">The depth value to search for exceedance.</param>
     /// <returns></returns>
-    public float GetMinutesToDepth(double depthValue)
+    public float GetMinutesToDepth(float depthValue)
     {
         if (depthValue > MaxDepth) { return -1; }
         if (Depths[0] > depthValue) { return 0; }
@@ -316,13 +316,13 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
     /// </summary>
     /// <param name="depthValue">The depth value to search for exceedance.</param>
     /// <returns></returns>
-    public double GetDurationMinutes(double depthThreshold)
+    public float GetDurationMinutes(float depthThreshold)
     {
         if (depthThreshold > MaxDepth) { return 0; }
 
         // Count duration above depth threshold
-        double totalDuration = 0;
-        double interpTime;
+        float totalDuration = 0;
+        float interpTime;
         for (int i = 0; i < Depths.Length - 1; i++)
         {
             if ((Depths[i] < depthThreshold) && Depths[i + 1] < depthThreshold) { continue; } // Both Below
@@ -352,10 +352,10 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
         private HydraulicTimeSeries _parentTimeSeries;
         private int _currentIndex = 0;
         private int _currentNextIndex = 1;
-        private double _currentDepthSlope;
-        private double _currentVelocitySlope;
+        private float _currentDepthSlope;
+        private float _currentVelocitySlope;
 
-        private double _currentTime = double.MinValue;
+        private float _currentTime = float.MinValue;
         private float _currentDepth;
         private float _currentVelocity;
         private float _currentDV;
@@ -366,7 +366,7 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
             _parentTimeSeries = parentSeries;
         }
 
-        public float GetCurrentDepthAndVelocity(double timeRelativeToHydraulicStart, ref float velocity, ref float DV, ref float DVsquared)
+        public float GetCurrentDepthAndVelocity(float timeRelativeToHydraulicStart, ref float velocity, ref float DV, ref float DVsquared)
         {
             // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
             // Early exit strategies
@@ -418,8 +418,8 @@ public class HydraulicTimeSeries:IHydraulicTimeseriesHazard
                     }
                     // End If
                     // 
-                    _currentDepthSlope = (_parentTimeSeries.Depths[_currentNextIndex] - _parentTimeSeries.Depths[_currentNextIndex - 1]) / (double)(_parentTimeSeries.TimeMinutes[_currentNextIndex] - _parentTimeSeries.TimeMinutes[_currentNextIndex - 1]);
-                    _currentVelocitySlope = (_parentTimeSeries.Velocities[_currentNextIndex] - _parentTimeSeries.Velocities[_currentNextIndex - 1]) / (double)(_parentTimeSeries.TimeMinutes[_currentNextIndex] - _parentTimeSeries.TimeMinutes[_currentNextIndex - 1]);
+                    _currentDepthSlope = (_parentTimeSeries.Depths[_currentNextIndex] - _parentTimeSeries.Depths[_currentNextIndex - 1]) / (float)(_parentTimeSeries.TimeMinutes[_currentNextIndex] - _parentTimeSeries.TimeMinutes[_currentNextIndex - 1]);
+                    _currentVelocitySlope = (_parentTimeSeries.Velocities[_currentNextIndex] - _parentTimeSeries.Velocities[_currentNextIndex - 1]) / (float)(_parentTimeSeries.TimeMinutes[_currentNextIndex] - _parentTimeSeries.TimeMinutes[_currentNextIndex - 1]);
                 }
                 // '''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
                 // Calculate the depth and velocity using linear interpolation

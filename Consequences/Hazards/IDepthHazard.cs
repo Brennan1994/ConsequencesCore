@@ -2,5 +2,5 @@ namespace Consequences.Hazards;
 
 public interface IDepthHazard : IHazard
 {
-    double Depth { get; }
+    float Depth { get; }
 }
