@@ -34,11 +34,9 @@ public class DamageBenchmarks
         var occupancy = new OccupancyType
         {
             Name = "RES1",
-            StructureDamageFunction = d => (float)structureCurve.GetYFromX(d),
-            ContentDamageFunction = d => (float)contentCurve.GetYFromX(d),
             FoundationHeightOffset = 0f,
-            StructureDamageFunctionOrdinates = structureCurve,
-            ContentDamageFunctionOrdinates = contentCurve
+            StructureDamageFunction = structureCurve,
+            ContentDamageFunction = contentCurve
         };
 
         var rng = new Random(42);

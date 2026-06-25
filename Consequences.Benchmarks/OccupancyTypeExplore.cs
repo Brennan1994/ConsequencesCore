@@ -30,14 +30,22 @@ public class OccupancyTypeExplore
             new double[] { 0.0, 8.0 }, new double[] { 0.0, 1.0 },
             strictOnX: true, SortOrder.Ascending, strictOnY: true, SortOrder.Ascending);
 
+        // var occupancy = new OccupancyType
+        // {
+        //     Name = "RES1",
+        //     StructureDamageFunction = d => (float)structureCurve.GetYFromX(d),
+        //     ContentDamageFunction = d => (float)contentCurve.GetYFromX(d),
+        //     FoundationHeightOffset = 0f,
+        //     StructureDamageFunctionOrdinates = structureCurve,
+        //     ContentDamageFunctionOrdinates = contentCurve
+        // };
+
         var occupancy = new OccupancyType
         {
             Name = "RES1",
-            StructureDamageFunction = d => (float)structureCurve.GetYFromX(d),
-            ContentDamageFunction = d => (float)contentCurve.GetYFromX(d),
             FoundationHeightOffset = 0f,
-            StructureDamageFunctionOrdinates = structureCurve,
-            ContentDamageFunctionOrdinates = contentCurve
+            StructureDamageFunction = structureCurve,
+            ContentDamageFunction = contentCurve
         };
 
         var rng = new Random(42);
@@ -86,19 +94,19 @@ public class OccupancyTypeExplore
         return total;
     }
 
-    [Benchmark]
-    public float DepthVelocityHazard_Ordinate()
-    {
-        float total = 0;
-        var buildings = _buildings;
-        var hazards = _depthVelocityHazards;
-        for (int i = 0; i < buildings.Length; i++)
-        {
-            ref var b = ref buildings[i];
-            total += b.ComputeOrdinate(hazards[i]).Total;
-        }
-        return total;
-    }
+    // [Benchmark]
+    // public float DepthVelocityHazard_Ordinate()
+    // {
+    //     float total = 0;
+    //     var buildings = _buildings;
+    //     var hazards = _depthVelocityHazards;
+    //     for (int i = 0; i < buildings.Length; i++)
+    //     {
+    //         ref var b = ref buildings[i];
+    //         total += b.ComputeOrdinate(hazards[i]).Total;
+    //     }
+    //     return total;
+    // }
 
 
 }
